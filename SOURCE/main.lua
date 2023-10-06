@@ -97,7 +97,6 @@ function playdate.update()
 
     gfx.clear()
     playdate.resetElapsedTime()
-    --drawMandelbrotNoTables()
     drawNativeMandelbrot()
     print(playdate.getElapsedTime())
     playdate.drawFPS(0, 0)

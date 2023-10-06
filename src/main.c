@@ -42,30 +42,39 @@ int render_mandelbrot(lua_State *L) {
   float starty = 1.0;
   float stopx = 1.0;
   float stopy = -1.0;
-  int height = playdate->display->getHeight();
-  int width = playdate->display->getWidth();
-  float xStep = (stopx - startx) / width;
-  float yStep = (stopy - starty) / height;
-  for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
-      float cre = startx + x * xStep;
-      float cim = starty + y * yStep;
-      float zre = 0.0;
-      float zim = 0.0;
+  float xStep = (stopx - startx) / LCD_COLUMNS;
+  float yStep = (stopy - starty) / LCD_ROWS;
+
+  uint8_t *frame = playdate->graphics->getFrame();
+
+  for (int r = 0; r < LCD_ROWS; r++) {
+    for (int c = 0; c < LCD_COLUMNS; c++) {
+      float y0 = starty + r * yStep;
+      float x0 = startx + c * xStep;
+
+      float x2 = 0.0;
+      float y2 = 0.0;
+      float w = 0.0;
 
       int iterations = 0;
       for (; iterations < MAX_ITERATIONS; iterations++) {
-        float old_zre = zre;
-        zre = (zre * zre - zim * zim) + cre;
-        zim = (2.0f * old_zre * zim) + cim;
+        float x = x2 - y2 + x0;
+        float y = w - x2 - y2 + y0;
+        x2 = x * x;
+        y2 = y * y;
+        w = (x + y) * (x + y);
 
-        if (zre * zre + zim * zim > 4.0f)
+        if (x2 + y2 > 4.0f)
           break;
       }
 
-      if (iterations == MAX_ITERATIONS)
-        playdate->graphics->drawRect(x, y, 1, 1, kColorBlack);
+      // color the frame
+      if (iterations == MAX_ITERATIONS) {
+        int index = c + r * (LCD_COLUMNS + 2 * 8);
+        frame[index / 8] ^= 0x80 >> (index % 8);
+      }
     }
   }
+
   return 0;
 }

@@ -1,4 +1,6 @@
-build/
+*build/
 *.pdx
 .cache/
 .DS_Store
+SOURCE/pdex.dylib
+SOURCE/pdex.elf

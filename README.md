@@ -1,4 +1,5 @@
 # Mandelbrot Playdate
+![Screenshot](screenshot.png)
 
 ## Build it yourself
 
