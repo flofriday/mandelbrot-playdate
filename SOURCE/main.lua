@@ -96,6 +96,7 @@ function playdate.update()
 
 
     gfx.clear()
+    print(getBuildTime())
     playdate.resetElapsedTime()
     drawNativeMandelbrot()
     print(playdate.getElapsedTime())
