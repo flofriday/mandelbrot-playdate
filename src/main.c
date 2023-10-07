@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -37,42 +38,53 @@ __declspec(dllexport)
 
 #define MAX_ITERATIONS 64
 
+inline void draw_pixel(uint8_t *frame, int x, int y) {
+  int index = x + y * (LCD_COLUMNS + 2 * 8);
+  frame[index / 8] ^= 0x80 >> (index % 8);
+}
+
+inline int calc_iterations(int c, int r, float start_x, float start_y,
+                           float step_x, float step_y) {
+  float y0 = start_y + r * step_y;
+  float x0 = start_x + c * step_x;
+
+  float x2 = 0.0;
+  float y2 = 0.0;
+  float w = 0.0;
+
+  int iterations = 0;
+  for (; iterations < MAX_ITERATIONS; iterations++) {
+    float x = x2 - y2 + x0;
+    float y = w - x2 - y2 + y0;
+    x2 = x * x;
+    y2 = y * y;
+    w = (x + y) * (x + y);
+
+    if (x2 + y2 > 4.0f)
+      return iterations;
+  }
+
+  return iterations;
+}
+
 int render_mandelbrot(lua_State *L) {
-  float startx = -2.5;
-  float starty = 1.0;
+  float start_x = -2.5;
+  float start_y = 1.0;
   float stopx = 1.0;
   float stopy = -1.0;
-  float xStep = (stopx - startx) / LCD_COLUMNS;
-  float yStep = (stopy - starty) / LCD_ROWS;
+  float step_x = (stopx - start_x) / LCD_COLUMNS;
+  float step_y = (stopy - start_y) / LCD_ROWS;
+
+  playdate->system->logToConsole("Version: %s", __TIMESTAMP__);
 
   uint8_t *frame = playdate->graphics->getFrame();
 
   for (int r = 0; r < LCD_ROWS; r++) {
     for (int c = 0; c < LCD_COLUMNS; c++) {
-      float y0 = starty + r * yStep;
-      float x0 = startx + c * xStep;
+      int iterations = calc_iterations(c, r, start_x, start_y, step_x, step_y);
 
-      float x2 = 0.0;
-      float y2 = 0.0;
-      float w = 0.0;
-
-      int iterations = 0;
-      for (; iterations < MAX_ITERATIONS; iterations++) {
-        float x = x2 - y2 + x0;
-        float y = w - x2 - y2 + y0;
-        x2 = x * x;
-        y2 = y * y;
-        w = (x + y) * (x + y);
-
-        if (x2 + y2 > 4.0f)
-          break;
-      }
-
-      // color the frame
-      if (iterations == MAX_ITERATIONS) {
-        int index = c + r * (LCD_COLUMNS + 2 * 8);
-        frame[index / 8] ^= 0x80 >> (index % 8);
-      }
+      if (iterations == MAX_ITERATIONS)
+        draw_pixel(frame, c, r);
     }
   }
 
