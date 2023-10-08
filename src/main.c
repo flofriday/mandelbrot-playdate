@@ -157,12 +157,12 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params) {
 }
 
 int render_mandelbrot(lua_State *L) {
-  float start_x = -2.5;
-  float start_y = 1.0;
-  float stopx = 1.0;
-  float stopy = -1.0;
-  float step_x = (stopx - start_x) / LCD_COLUMNS;
-  float step_y = (stopy - start_y) / LCD_ROWS;
+  float start_x = playdate->lua->getArgFloat(1);
+  float start_y = playdate->lua->getArgFloat(2);
+  float stop_x = playdate->lua->getArgFloat(3);
+  float stop_y = playdate->lua->getArgFloat(4);
+  float step_x = (stop_x - start_x) / LCD_COLUMNS;
+  float step_y = (stop_y - start_y) / LCD_ROWS;
 
   RenderParameters params = {
       start_x, start_y, step_x, step_y, playdate->graphics->getFrame(),

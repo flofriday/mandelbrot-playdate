@@ -88,6 +88,10 @@ function drawMandelbrotNoTables()
 end
 
 hasRendered = false
+startx = -2.5
+starty = 1.0
+stopx = 1.0
+stopy = -1.0
 function playdate.update()
     if hasRendered then
         return
@@ -98,11 +102,70 @@ function playdate.update()
     gfx.clear()
     print(getBuildTime())
     playdate.resetElapsedTime()
-    drawNativeMandelbrot()
+    drawNativeMandelbrot(startx, starty, stopx, stopy)
     print(playdate.getElapsedTime())
     playdate.drawFPS(0, 0)
 end
 
+function panOffset()
+    return (starty - startx) / 10
+end
+
+function zoomOffset()
+    return (starty - startx) / 100
+end
+
+function playdate.leftButtonDown()
+    hasRendered = false
+    offset = panOffset()
+    startx -= offset
+    stopx -= offset
+end
+
+function playdate.rightButtonDown()
+    hasRendered = false
+    offset = panOffset()
+    startx += offset
+    stopx += offset
+end
+
+function playdate.upButtonDown()
+    hasRendered = false
+    offset = panOffset()
+    starty += offset
+    stopy += offset
+end
+
+function playdate.downButtonDown()
+    hasRendered = false
+    offset = panOffset()
+    starty -= offset
+    stopy -= offset
+end
+
+function playdate.BButtonDown()
+    -- Resets the zoom / pan
+    hasRendered = false
+    startx = -2.5
+    starty = 1.0
+    stopx = 1.0
+    stopy = -1.0
+end
+
 function playdate.AButtonDown()
     hasRendered = false
+end
+
+function playdate.cranked(change, acceleratedChange)
+    hasRendered = false
+    offset_x = zoomOffset() * acceleratedChange
+
+    -- FIXME: There are still some distortions but this is the best I came up
+    -- with for now.
+    offset_y = offset_x * (3 / 5)
+
+    startx += offset_x
+    stopx -= offset_x
+    starty -= offset_y
+    stopy += offset_y
 end
