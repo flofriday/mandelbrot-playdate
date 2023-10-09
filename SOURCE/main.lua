@@ -88,16 +88,20 @@ function drawMandelbrotNoTables()
 end
 
 hasRendered = false
-startx = -2.5
-starty = 1.0
-stopx = 1.0
-stopy = -1.0
+centerx = -0.75
+centery = 0
+width = 3.5
 function playdate.update()
     if hasRendered then
+        playdate.drawFPS(0, 0)
         return
     end
     hasRendered = true
 
+    local startx = centerx - width / 2
+    local stopx = centerx + width / 2
+    local starty = centery - (width * 3 / 5) / 2
+    local stopy = centery + (width * 3 / 5) / 2
 
     gfx.clear()
     print(getBuildTime())
@@ -108,48 +112,39 @@ function playdate.update()
 end
 
 function panOffset()
-    return (starty - startx) / 10
+    return width / 10
 end
 
 function zoomOffset()
-    return (starty - startx) / 100
+    return width / 100
 end
 
 function playdate.leftButtonDown()
     hasRendered = false
-    offset = panOffset()
-    startx -= offset
-    stopx -= offset
+    centerx -= panOffset()
 end
 
 function playdate.rightButtonDown()
     hasRendered = false
-    offset = panOffset()
-    startx += offset
-    stopx += offset
+    centerx += panOffset()
 end
 
 function playdate.upButtonDown()
     hasRendered = false
-    offset = panOffset()
-    starty += offset
-    stopy += offset
+    centery -= panOffset()
 end
 
 function playdate.downButtonDown()
     hasRendered = false
-    offset = panOffset()
-    starty -= offset
-    stopy -= offset
+    centery += panOffset()
 end
 
 function playdate.BButtonDown()
     -- Resets the zoom / pan
     hasRendered = false
-    startx = -2.5
-    starty = 1.0
-    stopx = 1.0
-    stopy = -1.0
+    centerx = -0.75
+    centery = 0
+    width = 3.5
 end
 
 function playdate.AButtonDown()
@@ -158,14 +153,5 @@ end
 
 function playdate.cranked(change, acceleratedChange)
     hasRendered = false
-    offset_x = zoomOffset() * acceleratedChange
-
-    -- FIXME: There are still some distortions but this is the best I came up
-    -- with for now.
-    offset_y = offset_x * (3 / 5)
-
-    startx += offset_x
-    stopx -= offset_x
-    starty -= offset_y
-    stopy += offset_y
+    width -= zoomOffset() * change
 end
