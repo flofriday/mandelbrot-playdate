@@ -65,7 +65,7 @@ typedef struct {
 
 inline bool read_pixel(uint8_t *frame, int x, int y) {
   int index = x + y * (LCD_COLUMNS + 2 * 8);
-  return 1 - (frame[index / 8] >> (7 - (index % 8))) & 1;
+  return 1 - ((frame[index / 8] >> (7 - (index % 8))) & 1);
 }
 
 inline void draw_pixel(uint8_t *frame, int x, int y) {
@@ -98,8 +98,8 @@ inline bool calc_inside(int c, int r, RenderParameters params) {
 
 uint8_t *debug_bitmap;
 
-// At the momment this might recalculate some pixels more than once, if it
-// detects that they are not uniform
+//  At the momment this might recalculate some pixels more than once, if it
+//  detects that they are not uniform
 void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
                           Precalculated precalc) {
 
@@ -111,84 +111,84 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
   bool subdivide = false;
 
   // Calculate the top or check it
-  // if (!precalc.top) {
-  for (int i = 0; i < n; i++) {
-    bool is_inside = calc_inside(x + i, r, params);
-    if (is_inside != first) {
-      subdivide = true;
+  if (!precalc.top) {
+    for (int i = 0; i < n; i++) {
+      bool is_inside = calc_inside(x + i, r, params);
+      if (is_inside != first) {
+        subdivide = true;
+      }
+      if (is_inside) {
+        draw_pixel(params.frame, x + i, r);
+      }
     }
-    if (is_inside) {
-      draw_pixel(params.frame, x + i, r);
+  } else if (!subdivide) {
+    for (int i = 0; i < n; i++) {
+      if (read_pixel(params.frame, x + i, r) != first) {
+        subdivide = true;
+        break;
+      }
     }
   }
-  // } else if (!subdivide) {
-  //   for (int i = 0; i < n; i++) {
-  //     if (read_pixel(params.frame, x + i, r) != first) {
-  //       subdivide = true;
-  //       break;
-  //     }
-  //   }
-  // }
 
   // Calculate the right or check it
-  // if (!precalc.right) {
-  for (int i = 0; i < n; i++) {
-    bool is_inside = calc_inside(x + n - 1, y + i, params);
-    if (is_inside != first) {
-      subdivide = true;
+  if (!precalc.right) {
+    for (int i = 0; i < n; i++) {
+      bool is_inside = calc_inside(x + n - 1, y + i, params);
+      if (is_inside != first) {
+        subdivide = true;
+      }
+      if (is_inside) {
+        draw_pixel(params.frame, x + n - 1, y + i);
+      }
     }
-    if (is_inside) {
-      draw_pixel(params.frame, x + n - 1, y + i);
+  } else if (!subdivide) {
+    for (int i = 0; i < n; i++) {
+      if (read_pixel(params.frame, x + n - 1, y + i) != first) {
+        subdivide = true;
+        break;
+      }
     }
   }
-  // } else if (!subdivide) {
-  //   for (int i = 0; i < n; i++) {
-  //     if (read_pixel(params.frame, x + n - 1, y + i) != first) {
-  //       subdivide = true;
-  //       break;
-  //     }
-  //   }
-  // }
 
   // Calculate the bottom or check it
-  // if (!precalc.bottom) {
-  for (int i = 0; i < n; i++) {
-    bool is_inside = calc_inside(x + i, y + n - 1, params);
-    if (is_inside != first) {
-      subdivide = true;
+  if (!precalc.bottom) {
+    for (int i = 0; i < n; i++) {
+      bool is_inside = calc_inside(x + i, y + n - 1, params);
+      if (is_inside != first) {
+        subdivide = true;
+      }
+      if (is_inside) {
+        draw_pixel(params.frame, x + i, y + n - 1);
+      }
     }
-    if (is_inside) {
-      draw_pixel(params.frame, x + i, y + n - 1);
+  } else if (!subdivide) {
+    for (int i = 0; i < n; i++) {
+      if (read_pixel(params.frame, x + i, y + n - 1) != first) {
+        subdivide = true;
+        break;
+      }
     }
   }
-  // } else if (!subdivide) {
-  //   for (int i = 0; i < n; i++) {
-  //     if (read_pixel(params.frame, x + i, y + n - 1) != first) {
-  //       subdivide = true;
-  //       break;
-  //     }
-  //   }
-  // }
 
   // Calculate the left or check it
-  // if (!precalc.left) {
-  for (int i = 0; i < n; i++) {
-    bool is_inside = calc_inside(c, y + i, params);
-    if (is_inside != first) {
-      subdivide = true;
+  if (!precalc.left) {
+    for (int i = 0; i < n; i++) {
+      bool is_inside = calc_inside(c, y + i, params);
+      if (is_inside != first) {
+        subdivide = true;
+      }
+      if (is_inside) {
+        draw_pixel(params.frame, c, y + i);
+      }
     }
-    if (is_inside) {
-      draw_pixel(params.frame, c, y + i);
+  } else if (!subdivide) {
+    for (int i = 0; i < n; i++) {
+      if (read_pixel(params.frame, c, y + i) != first) {
+        subdivide = true;
+        break;
+      }
     }
   }
-  // } else if (!subdivide) {
-  //   for (int i = 0; i < n; i++) {
-  //     if (read_pixel(params.frame, c, y + i) != first) {
-  //       subdivide = true;
-  //       break;
-  //     }
-  //   }
-  // }
 
   // Subdivide if necessary
   if (subdivide) {
@@ -205,8 +205,7 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
       return;
     }
 
-    // top left, top right, bottom left,
-    // bottom right
+    // top left, top right, bottom left, bottom right
     Precalculated tl_precalc = {true, false, false, true};
     Precalculated tr_precalc = {true, true, false, true};
     Precalculated bl_precalc = {true, false, true, true};
@@ -222,10 +221,9 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
   if (!first)
     return;
 
-  // FIXME: don't color the border
-  for (int iy = 0; iy < n; iy++) {
-    for (int ix = 0; ix < n; ix++) {
-      draw_pixel(params.frame, x + ix, y + iy);
+  for (int iy = r + 1; iy < y + n - 1; iy++) {
+    for (int ix = c + 1; ix < x + n - 1; ix++) {
+      draw_pixel(params.frame, ix, iy);
     }
   }
 }
@@ -245,15 +243,9 @@ int render_mandelbrot(lua_State *L) {
       start_x, start_y, step_x, step_y, playdate->graphics->getFrame(),
   };
 
-  // for (int y = 0; y < LCD_ROWS; y++) {
-  //   for (int x = 0; x < LCD_COLUMNS; x++) {
-  //     draw_pixel(params.frame, x, y);
-  //   }
-  // }
-
   for (int y = 0; y < LCD_ROWS; y += 80) {
     for (int x = 0; x < LCD_COLUMNS; x += 80) {
-      Precalculated precalc = {y != 0, x != 0, false, false};
+      Precalculated precalc = {y != 0, false, false, x != 0};
       subdivide_mandelbrot(x, y, 80, params, precalc);
     }
   }
