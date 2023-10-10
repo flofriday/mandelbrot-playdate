@@ -96,7 +96,7 @@ inline bool calc_inside(int c, int r, RenderParameters params) {
   return true;
 }
 
-uint8_t *debug_bitmap;
+// uint8_t *debug_bitmap;
 
 //  At the momment this might recalculate some pixels more than once, if it
 //  detects that they are not uniform
@@ -107,10 +107,12 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
   int c = x - (x == 0 ? 0 : 1);
   int r = y - (y == 0 ? 0 : 1);
   // debug_draw_rect(debug_bitmap, c, r, n + x - c, n + y - r);
-  bool first = calc_inside(c, r, params);
+  bool first =
+      !precalc.top ? calc_inside(c, r, params) : read_pixel(params.frame, c, r);
   bool subdivide = false;
 
-  // Calculate the top or check it
+  // First calculate all not calculated sides
+  // Calculate the to
   if (!precalc.top) {
     for (int i = 0; i < n; i++) {
       bool is_inside = calc_inside(x + i, r, params);
@@ -119,13 +121,6 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
       }
       if (is_inside) {
         draw_pixel(params.frame, x + i, r);
-      }
-    }
-  } else if (!subdivide) {
-    for (int i = 0; i < n; i++) {
-      if (read_pixel(params.frame, x + i, r) != first) {
-        subdivide = true;
-        break;
       }
     }
   }
@@ -141,16 +136,9 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
         draw_pixel(params.frame, x + n - 1, y + i);
       }
     }
-  } else if (!subdivide) {
-    for (int i = 0; i < n; i++) {
-      if (read_pixel(params.frame, x + n - 1, y + i) != first) {
-        subdivide = true;
-        break;
-      }
-    }
   }
 
-  // Calculate the bottom or check it
+  // Calculate the bottom
   if (!precalc.bottom) {
     for (int i = 0; i < n; i++) {
       bool is_inside = calc_inside(x + i, y + n - 1, params);
@@ -159,13 +147,6 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
       }
       if (is_inside) {
         draw_pixel(params.frame, x + i, y + n - 1);
-      }
-    }
-  } else if (!subdivide) {
-    for (int i = 0; i < n; i++) {
-      if (read_pixel(params.frame, x + i, y + n - 1) != first) {
-        subdivide = true;
-        break;
       }
     }
   }
@@ -181,9 +162,31 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
         draw_pixel(params.frame, c, y + i);
       }
     }
-  } else if (!subdivide) {
+  }
+
+  // Check precalculated if subdivision is necessary
+  if (!subdivide) {
+    // The order here is genius as in the first iterations it checks all the
+    // 4 corners which are more likely to have different colors
     for (int i = 0; i < n; i++) {
-      if (read_pixel(params.frame, c, y + i) != first) {
+      if (precalc.top && read_pixel(params.frame, x + i, r) != first) {
+        subdivide = true;
+        break;
+      }
+
+      if (precalc.right &&
+          read_pixel(params.frame, x + n - 1, y + i) != first) {
+        subdivide = true;
+        break;
+      }
+
+      if (precalc.bottom &&
+          read_pixel(params.frame, x + n - 1 - i, y + n - 1) != first) {
+        subdivide = true;
+        break;
+      }
+
+      if (precalc.left && read_pixel(params.frame, c, y + n - 1 - i) != first) {
         subdivide = true;
         break;
       }
@@ -236,8 +239,8 @@ int render_mandelbrot(lua_State *L) {
   float step_x = (stop_x - start_x) / LCD_COLUMNS;
   float step_y = (stop_y - start_y) / LCD_ROWS;
 
-  playdate->graphics->getBitmapData(playdate->graphics->getDebugBitmap(), NULL,
-                                    NULL, NULL, NULL, &debug_bitmap);
+  // playdate->graphics->getBitmapData(playdate->graphics->getDebugBitmap(),
+  // NULL, NULL, NULL, NULL, &debug_bitmap);
 
   RenderParameters params = {
       start_x, start_y, step_x, step_y, playdate->graphics->getFrame(),
