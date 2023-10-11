@@ -71,6 +71,7 @@ inline bool read_pixel(uint8_t *frame, int x, int y) {
 inline void draw_pixel(uint8_t *frame, int x, int y) {
   int index = x + y * (LCD_COLUMNS + 2 * 8);
   frame[index / 8] &= (uint8_t)(0xFF7F >> (index % 8));
+  // frame[index / 8] ^= (uint8_t)(0x80 >> (index % 8));
 }
 
 inline bool calc_inside(int c, int r, RenderParameters params) {
@@ -81,8 +82,7 @@ inline bool calc_inside(int c, int r, RenderParameters params) {
   float y2 = 0.0;
   float w = 0.0;
 
-  int iterations = 0;
-  for (; iterations < MAX_ITERATIONS; iterations++) {
+  for (int iterations = 0; iterations < MAX_ITERATIONS; iterations++) {
     float x = x2 - y2 + x0;
     float y = w - x2 - y2 + y0;
     x2 = x * x;
@@ -96,23 +96,24 @@ inline bool calc_inside(int c, int r, RenderParameters params) {
   return true;
 }
 
-// uint8_t *debug_bitmap;
+uint8_t *debug_bitmap = NULL;
 
 //  At the momment this might recalculate some pixels more than once, if it
 //  detects that they are not uniform
 void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
                           Precalculated precalc) {
 
-  // Calculate the border and check uniformity
+  // Calculate the border
   int c = x - (x == 0 ? 0 : 1);
   int r = y - (y == 0 ? 0 : 1);
-  // debug_draw_rect(debug_bitmap, c, r, n + x - c, n + y - r);
+  // if (debug_bitmap)
+  //   debug_draw_rect(debug_bitmap, c, r, n + x - c, n + y - r);
+
   bool first =
       !precalc.top ? calc_inside(c, r, params) : read_pixel(params.frame, c, r);
   bool subdivide = false;
 
-  // First calculate all not calculated sides
-  // Calculate the to
+  // Calculate the top
   if (!precalc.top) {
     for (int i = 0; i < n; i++) {
       bool is_inside = calc_inside(x + i, r, params);
@@ -127,7 +128,7 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
 
   // Calculate the right or check it
   if (!precalc.right) {
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n - 1; i++) {
       bool is_inside = calc_inside(x + n - 1, y + i, params);
       if (is_inside != first) {
         subdivide = true;
@@ -197,9 +198,8 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
   if (subdivide) {
     // Exit condition
     if (n < 10) {
-      // Adjust for top and right most cells
-      for (int yi = 0; yi < n; yi++) {
-        for (int xi = 0; xi < n; xi++) {
+      for (int yi = y==0 ? 1 : 0; yi < n - 1; yi++) {
+        for (int xi = x == 0 ? 1 : 0; xi < n - 1; xi++) {
           bool is_black = calc_inside(x + xi, y + yi, params);
           if (is_black)
             draw_pixel(params.frame, x + xi, y + yi);
@@ -220,7 +220,7 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
     return;
   }
 
-  // Floodfill
+  // Floodfill the rectangle inside the border
   if (!first)
     return;
 
@@ -240,7 +240,8 @@ int render_mandelbrot(lua_State *L) {
   float step_y = (stop_y - start_y) / LCD_ROWS;
 
   // playdate->graphics->getBitmapData(playdate->graphics->getDebugBitmap(),
-  // NULL, NULL, NULL, NULL, &debug_bitmap);
+  // NULL,
+  //                                   NULL, NULL, NULL, &debug_bitmap);
 
   RenderParameters params = {
       start_x, start_y, step_x, step_y, playdate->graphics->getFrame(),
