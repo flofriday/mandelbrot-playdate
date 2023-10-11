@@ -239,6 +239,8 @@ int render_mandelbrot(lua_State *L) {
   float step_x = (stop_x - start_x) / LCD_COLUMNS;
   float step_y = (stop_y - start_y) / LCD_ROWS;
 
+  // FIXME: Polishing idea: Don't use subdivide if too far scrolled out.
+  
   // playdate->graphics->getBitmapData(playdate->graphics->getDebugBitmap(),
   // NULL,
   //                                   NULL, NULL, NULL, &debug_bitmap);
@@ -247,6 +249,8 @@ int render_mandelbrot(lua_State *L) {
       start_x, start_y, step_x, step_y, playdate->graphics->getFrame(),
   };
 
+  // FIXME: Test if smaller numbers would work better and with less graphical
+  // glitches
   for (int y = 0; y < LCD_ROWS; y += 80) {
     for (int x = 0; x < LCD_COLUMNS; x += 80) {
       Precalculated precalc = {y != 0, false, false, x != 0};
