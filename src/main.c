@@ -103,6 +103,17 @@ uint8_t *debug_bitmap = NULL;
 void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
                           Precalculated precalc) {
 
+  // FIXME: There is a extreme possibility for an optimization, where we don't 
+  // need to calculate the border.
+  // We take the point inside the cell and calculate it's distance estimator.
+  // if it is farther away than the corners of the cell we don't have to trace 
+  // the border and can color the cell white
+  // There seems to be a different distance estimator for inside of the 
+  // mandelbrot which would save even more time.
+  // If the distance estimator is smaller than half the width of the cell we 
+  // know that there is definitely a structure inside the cell which would also
+  // reduce the graphical glitches.
+
   // Calculate the border
   int c = x - (x == 0 ? 0 : 1);
   int r = y - (y == 0 ? 0 : 1);
