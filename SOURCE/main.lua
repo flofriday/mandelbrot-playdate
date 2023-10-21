@@ -153,5 +153,11 @@ end
 
 function playdate.cranked(change, acceleratedChange)
     hasRendered = false
-    width -= zoomOffset() * change
+    for _ = 0, math.abs(change) do
+        if change < 0 then
+            width += zoomOffset()
+        else
+            width -= zoomOffset()
+        end
+    end
 end
