@@ -17,7 +17,6 @@ function playdate.update()
     local stopy = centery + (width * 3 / 5) / 2
 
     gfx.clear()
-    print(getBuildTime())
     playdate.resetElapsedTime()
     drawNativeMandelbrot(startx, starty, stopx, stopy)
     print(playdate.getElapsedTime())

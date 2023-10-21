@@ -31,14 +31,15 @@ set(PLAYDATE_GAME_DEVICE mandelbrot_DEVICE)
 
 project(${PLAYDATE_GAME_NAME} C ASM)
 
+file(GLOB SRC_FILES src/*.c)
 if (TOOLCHAIN STREQUAL "armgcc")
-	add_executable(${PLAYDATE_GAME_DEVICE} src/main.c src/debug.c)
+	add_executable(${PLAYDATE_GAME_DEVICE} ${SRC_FILES})
 	target_compile_options(${PLAYDATE_GAME_DEVICE} PUBLIC -flto)
 	target_compile_options(${PLAYDATE_GAME_DEVICE} PUBLIC -finline-functions)
 	target_compile_options(${PLAYDATE_GAME_DEVICE} PUBLIC -funroll-loops)
 	target_compile_options(${PLAYDATE_GAME_DEVICE} PUBLIC -ffast-math)
 else()
-	add_library(${PLAYDATE_GAME_NAME} SHARED src/main.c src/debug.c)
+	add_library(${PLAYDATE_GAME_NAME} SHARED ${SRC_FILES})
 endif()
 
 include(${SDK}/C_API/buildsupport/playdate_game.cmake)
