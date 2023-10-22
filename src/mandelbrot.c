@@ -79,7 +79,7 @@ static float _Complex m_attractor(float _Complex w0, float _Complex c, int p) {
       dz = 2 * z * dz;
       z = z * z + c;
     }
-    w = w - (z - w) / (dz - 1);
+    w = w - (z - w) / (dz - 1.0f);
   }
   return w;
 }
@@ -102,17 +102,19 @@ static float estimate_interior_distance(float _Complex z0, float _Complex c,
 }
 
 static float estimate_distance(float _Complex c) {
+  // FIXME: Lot's of cabsf can be replaced as they are compared and we can
+  // simply square the other side of the comparison
   float _Complex dc = 0;
   float _Complex z = 0;
-  float m = 1.0 / 0.0;
+  float m = INFINITY;
   int p = 0;
-  for (int n = 1; n <= MAX_ITERATIONS; ++n) {
+  for (int n = 1; n < MAX_ITERATIONS; ++n) {
     dc = 2 * z * dc + 1;
     z = z * z + c;
-    if (cabsf(z) > 2)
+    if (cnorm(z) > 4)
       return 2.0f * cabsf(z) * logf(cabsf(z)) / cabsf(dc);
-    if (cabsf(z) < m) {
-      m = cabsf(z);
+    if (cnorm(z) < m) {
+      m = cnorm(z);
       p = n;
       float _Complex z0 = m_attractor(z, c, p);
       float _Complex w = z0;
@@ -121,7 +123,7 @@ static float estimate_distance(float _Complex c) {
         dw = 2 * w * dw;
         w = w * w + c;
       }
-      if (cabsf(dw) <= 1)
+      if (cnorm(dw) <= 1)
         return -estimate_interior_distance(z0, c, p);
     }
   }
@@ -141,7 +143,7 @@ static void subdivide_mandelbrot(int x, int y, int n, RenderParameters params) {
       (float)(params.start_x + params.step * (x + n / 2.0f)) +
       I * (float)(params.start_y + params.step * (y + n / 2.0f)));
   float distance = estimate_distance(point);
-  float to_corner = ((n / 2.0f + 1) * params.step) * 1.41421f * 1.5f;
+  float to_corner = ((n / 2.0f + 1.0f) * params.step) * 1.41421f * 1.5f;
 
   // flood-fill
   if (distance > to_corner) {
@@ -159,7 +161,7 @@ static void subdivide_mandelbrot(int x, int y, int n, RenderParameters params) {
   }
 
   // Exit condition
-  if (n < 10) {
+  if (n <= 10) {
     for (int yi = y; yi < y + n; yi++) {
       for (int xi = x; xi < x + n; xi++) {
         bool is_black = calc_inside(xi, yi, params);
@@ -187,7 +189,8 @@ int render_mandelbrot(lua_State *L) {
   // FIXME: Polishing idea: Don't use subdivide if too far scrolled out.
 
   // pd->graphics->getBitmapData(pd->graphics->getDebugBitmap(), NULL, NULL,
-  // NULL, NULL, &debug_bitmap);
+  // NULL,
+  //                            NULL, &debug_bitmap);
 
   RenderParameters params = {
       start_x,

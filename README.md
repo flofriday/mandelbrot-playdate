@@ -29,3 +29,9 @@ In the Simulator go to: Device -> Upload to Device.
 
 Note: The simulator might not run the game or display a different build as this 
 binary is not compatible with it.
+
+## Resources
+
+- [http://cowlark.com/2018-05-26-bogomandel/index.html](Rapidly rendering fractals on stupidly unsuitable machines)
+- [https://en.wikibooks.org/wiki/Fractals/Iterations_in_the_complex_plane/demm#Interior_distance_estimation](Fractals/Iterations in the complex plane/demm)
+- [https://mathr.co.uk/web/mandelbrot.html](The Mandelbrot Set - mathr)
