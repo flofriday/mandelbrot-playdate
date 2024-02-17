@@ -67,52 +67,8 @@ inline bool calc_inside(int c, int r, RenderParameters params) {
   return true;
 }
 
-float cnorm(float _Complex z) {
+inline float cnorm(float _Complex z) {
   return crealf(z) * crealf(z) + cimagf(z) * cimagf(z);
-}
-
-float estimate_interior_distance(float _Complex z0, float _Complex c, int p) {
-  float _Complex z = z0;
-  float _Complex dz = 1;
-  float _Complex dzdz = 0;
-  float _Complex dc = 0;
-  float _Complex dcdz = 0;
-  for (int m = 0; m < p; ++m) {
-    dcdz = 2 * (z * dcdz + dz * dc);
-    dc = 2 * z * dc + 1;
-    dzdz = 2 * (dz * dz + z * dzdz);
-    dz = 2 * z * dz;
-    z = z * z + c;
-  }
-  return (1.0f - cnorm(dz)) / cabsf(dcdz + dzdz * dc / (1.0f - dz));
-}
-
-float estimate_distance(float _Complex c) {
-  float _Complex dc = 0;
-  float _Complex z = 0;
-  float m = 1.0 / 0.0;
-  int p = 0;
-  for (int n = 1; n <= MAX_ITERATIONS; ++n) {
-    dc = 2 * z * dc + 1;
-    z = z * z + c;
-    if (cabsf(z) > 2)
-      return 2.0f * cabsf(z) * logf(cabsf(z)) / cabsf(dc);
-    if (cabsf(z) < m) {
-      m = cabsf(z);
-      p = n;
-      // float _Complex z0 = m_attractor(z, c, p);
-      float _Complex z0 = 0;
-      float _Complex w = z0;
-      float _Complex dw = 1;
-      for (int k = 0; k < p; ++k) {
-        dw = 2 * w * dw;
-        w = w * w + c;
-      }
-      if (cabsf(dw) <= 1)
-        return estimate_interior_distance(z0, c, p);
-    }
-  }
-  return 0;
 }
 
 uint8_t *debug_bitmap = NULL;
