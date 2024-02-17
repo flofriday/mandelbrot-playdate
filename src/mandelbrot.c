@@ -104,19 +104,6 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
     }
   }
 
-  // Calculate the right or check it
-  if (!precalc.right) {
-    for (int i = 0; i < n - 1; i++) {
-      bool is_inside = calc_inside(x + n - 1, y + i, params);
-      if (is_inside != first) {
-        subdivide = true;
-      }
-      if (is_inside) {
-        draw_pixel(params.frame, x + n - 1, y + i);
-      }
-    }
-  }
-
   // Calculate the bottom
   if (!precalc.bottom) {
     for (int i = 0; i < n; i++) {
@@ -143,18 +130,25 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
     }
   }
 
+  // Calculate the right or check it
+  if (!precalc.right) {
+    for (int i = 0; i < n - 1; i++) {
+      bool is_inside = calc_inside(x + n - 1, y + i, params);
+      if (is_inside != first) {
+        subdivide = true;
+      }
+      if (is_inside) {
+        draw_pixel(params.frame, x + n - 1, y + i);
+      }
+    }
+  }
+
   // Check precalculated if subdivision is necessary
   if (!subdivide) {
     // The order here is genius as in the first iterations it checks all the
     // 4 corners which are more likely to have different colors
     for (int i = 0; i < n; i++) {
       if (precalc.top && read_pixel(params.frame, x + i, r) != first) {
-        subdivide = true;
-        break;
-      }
-
-      if (precalc.right &&
-          read_pixel(params.frame, x + n - 1, y + i) != first) {
         subdivide = true;
         break;
       }
@@ -166,6 +160,12 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
       }
 
       if (precalc.left && read_pixel(params.frame, c, y + n - 1 - i) != first) {
+        subdivide = true;
+        break;
+      }
+
+      if (precalc.right &&
+          read_pixel(params.frame, x + n - 1, y + i) != first) {
         subdivide = true;
         break;
       }
@@ -227,7 +227,7 @@ int render_mandelbrot(lua_State *L) {
   };
 
   // FIXME: Test if smaller numbers would work better and with less graphical
-  // glitches, this should not be an issue with distance estimator.
+  // glitches.
   for (int y = 0; y < LCD_ROWS; y += 80) {
     for (int x = 0; x < LCD_COLUMNS; x += 80) {
       Precalculated precalc = {y != 0, false, false, x != 0};
