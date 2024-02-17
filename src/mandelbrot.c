@@ -8,13 +8,13 @@
 #include "pd_api/pd_api_gfx.h"
 #include "pd_api/pd_api_lua.h"
 
-#include "debug.h"
+// #include "debug.h"
 
 #include "mandelbrot.h"
 
-PlaydateAPI *playdate;
+PlaydateAPI *pd_api;
 
-void init_mandellib(PlaydateAPI *api) { playdate = api; }
+void init_mandellib(PlaydateAPI *api) { pd_api = api; }
 
 typedef struct {
   float start_x;
@@ -78,27 +78,13 @@ uint8_t *debug_bitmap = NULL;
 void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
                           Precalculated precalc) {
 
-  // FIXME: There is a extreme possibility for an optimization, where we don't
-  // need to calculate the border.
-  // We take the point inside the cell and calculate it's distance estimator.
-  // if it is farther away than the corners of the cell we don't have to trace
-  // the border and can color the cell white
-  // There seems to be a different distance estimator for inside of the
-  // mandelbrot which would save even more time.
-  // If the distance estimator is smaller than half the width of the cell we
-  // know that there is definitely a structure inside the cell which would also
-  // reduce the graphical glitches.
-
   // FIXME: the comparison is not right
-  float _Complex point =
-      CMPLXF(params.start_x + params.step_x * (x + n / 2.0f),
-             params.start_y + params.step_y * (y + n / 2.0f));
-  if (estimate_distance(point) > n * params.step_x) {
-    debug_draw_rect(debug_bitmap, x, y, n, n);
-  }
+  // float _Complex point = params.start_x + params.step_x * (x + n / 2.0f) +
+  //                        params.start_y + params.step_y * (y + n / 2.0f) * I;
 
   // Calculate the border
-  int c = x - (x == 0 ? 0 : 1);
+  int placeholder = 1;
+  int c = x - (x == 0 ? 0 : placeholder);
   int r = y - (y == 0 ? 0 : 1);
 
   bool first =
@@ -224,20 +210,20 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
 }
 
 int render_mandelbrot(lua_State *L) {
-  float start_x = playdate->lua->getArgFloat(1);
-  float start_y = playdate->lua->getArgFloat(2);
-  float stop_x = playdate->lua->getArgFloat(3);
-  float stop_y = playdate->lua->getArgFloat(4);
+  float start_x = pd_api->lua->getArgFloat(1);
+  float start_y = pd_api->lua->getArgFloat(2);
+  float stop_x = pd_api->lua->getArgFloat(3);
+  float stop_y = pd_api->lua->getArgFloat(4);
   float step_x = (stop_x - start_x) / LCD_COLUMNS;
   float step_y = (stop_y - start_y) / LCD_ROWS;
 
   // FIXME: Polishing idea: Don't use subdivide if too far scrolled out.
 
-  playdate->graphics->getBitmapData(playdate->graphics->getDebugBitmap(), NULL,
-                                    NULL, NULL, NULL, &debug_bitmap);
+  // playdate->graphics->getBitmapData(playdate->graphics->getDebugBitmap(),
+  // NULL, NULL, NULL, NULL, &debug_bitmap);
 
   RenderParameters params = {
-      start_x, start_y, step_x, step_y, playdate->graphics->getFrame(),
+      start_x, start_y, step_x, step_y, pd_api->graphics->getFrame(),
   };
 
   // FIXME: Test if smaller numbers would work better and with less graphical
