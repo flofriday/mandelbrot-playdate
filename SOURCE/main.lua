@@ -6,7 +6,7 @@ centery = 0
 width = 3.5
 function playdate.update()
     if hasRendered then
-        playdate.drawFPS(0, 0)
+        --playdate.drawFPS(0, 0)
         return
     end
     hasRendered = true

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "fixmath.h"
 #include "pd_api.h"
 #include "pd_api/pd_api_gfx.h"
 #include "pd_api/pd_api_lua.h"
@@ -46,32 +47,29 @@ inline void draw_pixel(uint8_t *frame, int x, int y) {
 }
 
 inline bool calc_inside(int c, int r, RenderParameters params) {
-  float y0 = params.start_y + r * params.step_y + (params.step_y / 2.0f);
-  float x0 = params.start_x + c * params.step_x + (params.step_x / 2.0f);
+  fix32_t y0 =
+      ftofix32(params.start_y + r * params.step_y + (params.step_y / 2.0f));
+  fix32_t x0 =
+      ftofix32(params.start_x + c * params.step_x + (params.step_x / 2.0f));
 
-  float x2 = 0.0;
-  float y2 = 0.0;
-  float w = 0.0;
+  fix32_t x2 = ftofix32(0.0);
+  fix32_t y2 = ftofix32(0.0);
+  fix32_t w = ftofix32(0.0);
+  fix32_t limit = ftofix32(4.0f);
 
   for (int iterations = 0; iterations < MAX_ITERATIONS; iterations++) {
-    float x = x2 - y2 + x0;
-    float y = w - x2 - y2 + y0;
-    x2 = x * x;
-    y2 = y * y;
-    w = (x + y) * (x + y);
+    fix32_t x = x2 - y2 + x0;
+    fix32_t y = w - x2 - y2 + y0;
+    x2 = fix32_mul(x, x);
+    y2 = fix32_mul(y, y);
+    w = fix32_mul((x + y), (x + y));
 
-    if (x2 + y2 > 4.0f)
+    if (x2 + y2 > limit)
       return false;
   }
 
   return true;
 }
-
-inline float cnorm(float _Complex z) {
-  return crealf(z) * crealf(z) + cimagf(z) * cimagf(z);
-}
-
-uint8_t *debug_bitmap = NULL;
 
 //  At the momment this might recalculate some pixels more than once, if it
 //  detects that they are not uniform
