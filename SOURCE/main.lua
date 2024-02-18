@@ -1,12 +1,70 @@
+import "CoreLibs/graphics"
+
 gfx = playdate.graphics
 
-hasRendered = false
-centerx = -0.75
-centery = 0
-width = 3.5
+
+hasRendered = nil
+centerx = nil
+centery = nil
+width = nil
+
+optionDrawUI = true
+optionDrawFPS = false
+
+function resetZoom()
+    hasRendered = false
+    centerx = -0.75
+    centery = 0
+    width = 3.5
+end
+
+resetZoom()
+
+function drawFPS()
+    if optionDrawFPS then
+        playdate.drawFPS(0, 0)
+    end
+end
+
+function drawUI()
+    if not optionDrawUI then
+        return
+    end
+
+    local font = gfx.getSystemFont()
+    local padding = 6
+    local textHeight = font:getHeight()
+
+    -- Left bottom hint
+    local leftText = "✛ *move*"
+    local leftTextWidth, _ = gfx.getTextSize(leftText)
+    gfx.setColor(gfx.kColorWhite)
+    gfx.fillRoundRect(0 - 42, 240 - 2 * padding - textHeight, leftTextWidth + 2 * padding + 42,
+        2 * padding + textHeight + 42, padding)
+    gfx.setColor(gfx.kColorBlack)
+    gfx.setLineWidth(3)
+    gfx.drawRoundRect(0 - 42, 240 - 2 * padding - textHeight - 2, leftTextWidth + 2 * padding + 42 + 2,
+        2 * padding + textHeight + 42, padding)
+    gfx.setLineWidth(1)
+    gfx.drawText(leftText, padding, 240 - padding - textHeight)
+
+    -- Right bottom hint
+    local rightText = "🎣 *zoom*  Ⓑ *reset*"
+    local rightTextWidth, _ = gfx.getTextSize(rightText)
+    gfx.setColor(gfx.kColorWhite)
+    gfx.fillRoundRect(400 - 2 * padding - rightTextWidth, 240 - 2 * padding - textHeight,
+        rightTextWidth + 2 * padding + 42, 2 * padding + textHeight + 42, padding)
+    gfx.setColor(gfx.kColorBlack)
+    gfx.setLineWidth(3)
+    gfx.drawRoundRect(400 - 2 * padding - rightTextWidth - 2, 240 - 2 * padding - textHeight - 2,
+        rightTextWidth + 2 * padding + 42, 2 * padding + textHeight + 42, padding)
+    gfx.setLineWidth(1)
+    gfx.drawTextAligned(rightText, 400 - padding, 240 - padding - font:getHeight(), kTextAlignment.right)
+end
+
 function playdate.update()
     if hasRendered then
-        playdate.drawFPS(0, 0)
+        drawFPS()
         return
     end
     hasRendered = true
@@ -20,7 +78,9 @@ function playdate.update()
     playdate.resetElapsedTime()
     drawNativeMandelbrot(startx, starty, stopx, stopy)
     print(playdate.getElapsedTime())
-    playdate.drawFPS(0, 0)
+
+    drawFPS()
+    drawUI()
 end
 
 function panOffset()
@@ -52,11 +112,7 @@ function playdate.downButtonDown()
 end
 
 function playdate.BButtonDown()
-    -- Resets the zoom / pan
-    hasRendered = false
-    centerx = -0.75
-    centery = 0
-    width = 3.5
+    resetZoom()
 end
 
 function playdate.AButtonDown()
@@ -73,3 +129,21 @@ function playdate.cranked(change, acceleratedChange)
         end
     end
 end
+
+-- Menu options
+menu = playdate.getSystemMenu()
+
+menu:addCheckmarkMenuItem("Show UI", optionDrawUI, function(value)
+    hasRendered = false
+    optionDrawUI = value
+end)
+
+
+menu:addCheckmarkMenuItem("Draw FPS", optionDrawFPS, function(value)
+    hasRendered = false
+    optionDrawFPS = value
+end)
+
+
+-- menu:addMenuItem("About", function()
+--end)

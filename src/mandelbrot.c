@@ -87,8 +87,10 @@ void subdivide_mandelbrot(int x, int y, int n, RenderParameters params,
   int c = x - (x == 0 ? 0 : placeholder);
   int r = y - (y == 0 ? 0 : 1);
 
-  bool first =
-      !precalc.top ? calc_inside(c, r, params) : read_pixel(params.frame, c, r);
+  // The first probe is in the dead center to improve reduced artifact "popping"
+  // bool first = !precalc.top ? calc_inside(c, r, params) :
+  // read_pixel(params.frame, c, r);
+  bool first = calc_inside(c + n / 2, r + n / 2, params);
   bool subdivide = false;
 
   // Calculate the top
