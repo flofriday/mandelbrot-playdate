@@ -1,0 +1,8 @@
+name=Mandelbrot Explorer
+author=flofriday
+description=Explore the mandelbrot set with the crank.
+bundleID=dev.flofriday.mandelbrotexplorer
+version=1.0
+buildNumber=1
+imagePath=./images
+contentWarning=This game might cause sudden outbreaks of mathematical appreciation.
